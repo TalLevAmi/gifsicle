@@ -694,14 +694,20 @@ resize_stream(Gif_Stream *gfs, double new_width, double new_height, int fit,
         xfactor = (double) nw / gfs->screen_width;
     }
 
+    /* refuse to create 0-pixel dimensions */
+    if (nw == 0)
+        nw = 1;
+    if (nh == 0)
+        nh = 1;
+
     xyarr = Gif_NewArray(uint16_t, gfs->screen_width + gfs->screen_height + 2);
-    for (i = 0; i != gfs->screen_width + 1; ++i)
+    for (i = 0; i != gfs->screen_width; ++i)
         xyarr[i] = (int) (i * xfactor);
-    for (i = 0; i != gfs->screen_height + 1; ++i)
+    xyarr[gfs->screen_width] = nw;
+    for (i = 0; i != gfs->screen_height; ++i)
         xyarr[gfs->screen_width + 1 + i] = (int) (i * yfactor);
-    assert(xyarr[gfs->screen_width] == nw);
+    xyarr[gfs->screen_width + 1 + gfs->screen_height] = nh;
     assert(xyarr[gfs->screen_width - 1] != nw);
-    assert(xyarr[gfs->screen_width + 1 + gfs->screen_height] == nh);
     assert(xyarr[gfs->screen_width + gfs->screen_height] != nh);
 
     scale_context_init(&sctx, gfs, &xyarr[0], &xyarr[gfs->screen_width+1]);
