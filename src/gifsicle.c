@@ -942,7 +942,8 @@ merge_and_write_frames(const char *outfile, int f1, int f2)
     Gif_DeleteStream(out);
   }
 
-  if (verbosing) verbose_close(']');
+  if (verbosing)
+    verbose_close(']');
   active_output_data.active_output_name = 0;
 }
 
@@ -1327,6 +1328,7 @@ main(int argc, char *argv[])
      "sample", SCALE_METHOD_POINT,
      "mix", SCALE_METHOD_MIX,
      "box", SCALE_METHOD_BOX,
+     "catrom", SCALE_METHOD_CATROM,
      "fast", SCALE_METHOD_POINT,
      "good", SCALE_METHOD_MIX,
      (const char*) 0);
