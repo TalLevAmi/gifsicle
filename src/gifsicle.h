@@ -109,6 +109,7 @@ typedef struct {
   int colormap_size;
   Gif_Colormap *colormap_fixed;
   int colormap_algorithm;
+  int colormap_needs_transparency;
   int dither_type;
   const uint8_t* dither_data;
   const char* dither_name;
@@ -245,7 +246,6 @@ void	resize_stream(Gif_Stream *, double new_width, double new_height,
 /*****
  * quantization
  **/
-Gif_Color *histogram(Gif_Stream *, int *);
 #define KC_GAMMA_SRGB			0
 #define KC_GAMMA_NUMERIC		1
 void    kc_set_gamma(int type, double gamma);
@@ -253,9 +253,6 @@ void    kc_set_gamma(int type, double gamma);
 #define COLORMAP_DIVERSITY		0
 #define COLORMAP_BLEND_DIVERSITY	1
 #define COLORMAP_MEDIAN_CUT		2
-Gif_Colormap* colormap_blend_diversity(Gif_Color*, int, Gt_OutputData*);
-Gif_Colormap* colormap_flat_diversity(Gif_Color*, int, Gt_OutputData*);
-Gif_Colormap* colormap_median_cut(Gif_Color*, int, Gt_OutputData*);
 
 enum {
     dither_none = 0, dither_default, dither_floyd_steinberg,
