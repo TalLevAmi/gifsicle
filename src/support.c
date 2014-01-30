@@ -361,7 +361,7 @@ extension_info(FILE *where, Gif_Stream *gfs, Gif_Extension *gfex, int count)
   fprintf(where, "  extension %d: ", count);
   if (gfex->kind == 255) {
     fprintf(where, "app '");
-    safe_puts(gfex->application, strlen(gfex->application), where);
+    safe_puts(gfex->appname, gfex->applength, where);
     fprintf(where, "'");
   } else {
     if (gfex->kind >= 32 && gfex->kind < 127)
@@ -370,9 +370,12 @@ extension_info(FILE *where, Gif_Stream *gfs, Gif_Extension *gfex, int count)
       fprintf(where, "0x%02X", gfex->kind);
   }
   if (gfex->position >= gfs->nimages)
-    fprintf(where, " at end\n");
+    fprintf(where, " at end");
   else
-    fprintf(where, " before #%d\n", gfex->position);
+    fprintf(where, " before #%d", gfex->position);
+  if (gfex->packetized)
+    fprintf(where, " packetized");
+  fprintf(where, "\n");
 
   /* Now, hexl the data. */
   while (len > 0) {
@@ -1033,17 +1036,18 @@ add_frame(Gt_Frameset *fset, int number, Gif_Stream *gfs, Gif_Image *gfi)
 static Gif_Extension *
 copy_extension(Gif_Extension *src)
 {
-  Gif_Extension *dest = Gif_NewExtension(src->kind, src->application);
-  if (!dest) return 0;
-  dest->data = Gif_NewArray(uint8_t, src->length);
-  dest->length = src->length;
-  dest->free_data = Gif_DeleteArrayFunc;
-  if (!dest->data) {
-    Gif_DeleteExtension(dest);
-    return 0;
-  }
-  memcpy(dest->data, src->data, src->length);
-  return dest;
+    Gif_Extension *dest = Gif_NewExtension(src->kind, src->appname, src->applength);
+    if (!dest) return 0;
+    dest->data = Gif_NewArray(uint8_t, src->length);
+    dest->length = src->length;
+    dest->free_data = Gif_DeleteArrayFunc;
+    if (!dest->data) {
+        Gif_DeleteExtension(dest);
+        return 0;
+    }
+    memcpy(dest->data, src->data, src->length);
+    dest->packetized = src->packetized;
+    return dest;
 }
 
 
@@ -1615,6 +1619,7 @@ merge_frame_interval(Gt_Frameset *fset, int f1, int f2,
 
     if (fr->interlacing >= 0)
       desti->interlace = fr->interlacing;
+    fprintf(stderr, "%d %d %d %d %d %d\n", i, fr->left, desti->left, fr->top, desti->top, fr->position_is_offset);
     if (fr->left >= 0)
       desti->left = fr->left + (fr->position_is_offset ? desti->left : 0);
     if (fr->top >= 0)
@@ -1669,22 +1674,8 @@ merge_frame_interval(Gt_Frameset *fset, int f1, int f2,
   }
   /** END MERGE LOOP **/
 
-  /* Cropping the whole output? */
+  /* Cropping the whole output? Reset logical screen */
   if (merger[0]->crop && merger[0]->crop == merger[nmerger - 1]->crop) {
-    /* Adjust positions */
-    int l = 0x7FFFFFFF, t = 0x7FFFFFFF;
-    for (i = 0; i < dest->nimages && (l || t); i++) {
-      Gif_Image *gfi = dest->images[i];
-      if (gfi->left < l)
-        l = gfi->left;
-      if (gfi->top < t)
-        t = gfi->top;
-    }
-    for (i = 0; i < dest->nimages; i++) {
-      Gif_Image *gfi = dest->images[i];
-      gfi->left -= l;
-      gfi->top -= t;
-    }
     /* 13.May.2008: Set the logical screen to the cropped dimensions */
     /* 18.May.2008: Unless --crop-transparency is on */
     if (merger[0]->crop->transparent_edges)
