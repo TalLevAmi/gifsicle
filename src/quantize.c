@@ -525,11 +525,7 @@ colormap_median_cut(Gif_Color* hist, int nhist, Gt_OutputData* od)
     k.a[0] = (int) (red_total / slots[i].pixel);
     k.a[1] = (int) (green_total / slots[i].pixel);
     k.a[2] = (int) (blue_total / slots[i].pixel);
-    kc_revgamma_transform(&k);
-    adapt[i].gfc_red = (uint8_t) (k.a[0] >> 7);
-    adapt[i].gfc_green = (uint8_t) (k.a[1] >> 7);
-    adapt[i].gfc_blue = (uint8_t) (k.a[2] >> 7);
-    adapt[i].haspixel = 0;
+    adapt[i] = kc_togfcg(&k);
   }
 
   Gif_DeleteArray(slots);
@@ -706,10 +702,7 @@ colormap_diversity(Gif_Color *hist, int nhist, Gt_OutputData* od,
         k.a[0] = (int) (red_total / pixel_total);
         k.a[1] = (int) (green_total / pixel_total);
         k.a[2] = (int) (blue_total / pixel_total);
-        kc_revgamma_transform(&k);
-	adapt[i].gfc_red = (uint8_t) (k.a[0] >> 7);
-	adapt[i].gfc_green = (uint8_t) (k.a[1] >> 7);
-	adapt[i].gfc_blue = (uint8_t) (k.a[2] >> 7);
+        adapt[i] = kc_togfcg(&k);
       }
       adapt[i].haspixel = 0;
     }
